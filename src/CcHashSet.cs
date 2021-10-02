@@ -88,6 +88,7 @@ namespace HashSetDemo
             }
             else
             {
+                Interlocked.Decrement(ref freeNodes);
                 nodes[mhash].Next = nodes[next].Next;
                 return next;
             }
