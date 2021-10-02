@@ -123,8 +123,6 @@ namespace HashSetDemo
 
             lock (locks[(hash % slotl) % MaxLocks])
             {
-                // No need to check if we hold the correct lock, since even after a resize
-                // hash % MaxLocks gives the same value.
                 if (signalResize || slotl != slots.Length) goto retry;
                 return AddInternal(item, hash);
             }
