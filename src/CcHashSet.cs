@@ -128,11 +128,44 @@ namespace HashSetDemo
             while (signalResize) spinWait.SpinOnce();
 
             int slotl = slots.Length;
+            int hashms = hash % slotl;
+            int hashmsml = hashms % MaxLocks;
 
-            lock (locks[(hash % slotl) % MaxLocks])
+            lock (locks[hashmsml])
             {
                 if (signalResize || slotl != slots.Length) goto retry;
-                return AddInternal(item, hash);
+
+                int nidx = slots[hashms];
+
+                if (nidx == NullNode)
+                {
+                    slots[hashms] = nidx = AllocateNode(hashmsml);
+                    nodes[nidx].Data = item;
+                    nodes[nidx].Next = NullNode;
+                    nodes[nidx].Hash = hash;
+                    return true;
+                }
+
+                ref Node<T> node = ref nodes[nidx];
+
+                while (true)
+                {
+                    if (node.Hash == hash && comparer.Equals(node.Data, item))
+                    {
+                        return false; // object already in set
+                    }
+
+                    if (node.Next == NullNode) break;
+                    node = ref nodes[node.Next];
+                }
+
+                node.Next = AllocateNode(hashmsml);
+                node = ref nodes[node.Next];
+                node.Next = NullNode;
+                node.Hash = hash;
+                node.Data = item;
+
+                return true;
             }
 
         }
@@ -150,11 +183,52 @@ namespace HashSetDemo
             while (signalResize) spinWait.SpinOnce();
 
             int slotl = slots.Length;
+            int hashms = hash % slotl;
+            int hashmsml = hashms % MaxLocks;
 
             lock (locks[(hash % slotl) % MaxLocks])
             {
                 if (signalResize || slotl != slots.Length) goto retry;
-                return RemoveInternal(item, hash);
+
+                int nidx = slots[hashms];
+                if (nidx == NullNode) return false;
+
+                ref Node<T> current = ref nodes[nidx];
+
+                if (comparer.Equals(current.Data, item))
+                {
+                    if (current.Next != NullNode)
+                    {
+                        int tr = current.Next;
+                        current.Data = nodes[current.Next].Data;
+                        current.Next = nodes[current.Next].Next;
+                        FreeNode(tr, hashmsml);
+                    }
+                    else
+                    {
+                        slots[hashms] = NullNode;
+                        FreeNode(nidx, hashmsml);
+                    }
+
+                    return true;
+                }
+
+                while (current.Next != NullNode)
+                {
+                    ref Node<T> next = ref nodes[current.Next];
+
+                    if (comparer.Equals(next.Data, item))
+                    {
+                        int tr = current.Next;
+                        current.Next = next.Next;
+                        FreeNode(tr, hashmsml);
+                        return true;
+                    }
+
+                    current = ref nodes[current.Next];
+                }
+
+                return false;
             }
         }
 
@@ -208,51 +282,6 @@ namespace HashSetDemo
             get => nodePointer - freeNodes - MaxLocks;
         }
 
-        private bool RemoveInternal(T item, int hash)
-        {
-            int mhash = hash % slots.Length;
-
-            int nidx = slots[mhash];
-            if (nidx == NullNode) return false;
-
-            ref Node<T> current = ref nodes[nidx];
-
-            if (comparer.Equals(current.Data, item))
-            {
-                if (current.Next != NullNode)
-                {
-                    int tr = current.Next;
-                    current.Data = nodes[current.Next].Data;
-                    current.Next = nodes[current.Next].Next;
-                    FreeNode(tr, mhash % MaxLocks);
-                }
-                else
-                {
-                    slots[mhash] = NullNode;
-                    FreeNode(nidx, mhash % MaxLocks);
-                }
-
-                return true;
-            }
-
-            while (current.Next != NullNode)
-            {
-                ref Node<T> next = ref nodes[current.Next];
-
-                if (comparer.Equals(next.Data, item))
-                {
-                    int tr = current.Next;
-                    current.Next = next.Next;
-                    FreeNode(tr, mhash % MaxLocks);
-                    return true;
-                }
-
-                current = ref nodes[current.Next];
-            }
-
-            return false;
-        }
-
         private void EnsureSize()
         {
             if (this.Count * 10 > slots.Length * 7)
@@ -301,42 +330,6 @@ namespace HashSetDemo
                     signalResize = false;
                 }
             }
-        }
-
-        private bool AddInternal(T item, int hash)
-        {
-            int mhash = hash % slots.Length;
-            int nidx = slots[mhash];
-
-            if (nidx == NullNode)
-            {
-                slots[mhash] = nidx = AllocateNode(mhash % MaxLocks);
-                nodes[nidx].Data = item;
-                nodes[nidx].Next = NullNode;
-                nodes[nidx].Hash = hash;
-                return true;
-            }
-
-            ref Node<T> node = ref nodes[nidx];
-
-            while (true)
-            {
-                if (node.Hash == hash && comparer.Equals(node.Data, item))
-                {
-                    return false; // object already in set
-                }
-
-                if (node.Next == NullNode) break;
-                node = ref nodes[node.Next];
-            }
-
-            node.Next = AllocateNode(mhash % MaxLocks);
-            node = ref nodes[node.Next];
-            node.Next = NullNode;
-            node.Hash = hash;
-            node.Data = item;
-
-            return true;
         }
 
         public IEnumerator<T> GetEnumerator()
