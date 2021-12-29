@@ -186,7 +186,7 @@ namespace HashSetDemo
             int hashms = hash % slotl;
             int hashmsml = hashms % MaxLocks;
 
-            lock (locks[(hash % slotl) % MaxLocks])
+            lock (locks[hashmsml])
             {
                 if (signalResize || slotl != slots.Length) goto retry;
 
