@@ -117,7 +117,7 @@ namespace HashSetDemo
         /// Adds an item to the set.
         /// </summary>
         /// <param name="item">Item to add.</param>
-        /// <returns>Return false, if the set already contains the item. Otherwise false.</returns>
+        /// <returns>Return false, if the set already contains the item. Otherwise true.</returns>
         public bool Add(T item)
         {
             EnsureSize();
@@ -174,7 +174,7 @@ namespace HashSetDemo
         /// Removes an item from the set.
         /// </summary>
         /// <param name="item">Item to remove.</param>
-        /// <returns>Returns false, if the item is not in the set. True otherwise.</returns>
+        /// <returns>Returns false, if the item is not in the set. Otherwise true.</returns>
         public bool Remove(T item)
         {
             int hash = ClampHash(comparer.GetHashCode(item));
