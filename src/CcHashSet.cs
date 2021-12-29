@@ -24,6 +24,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System.Runtime.CompilerServices; 
 
 namespace HashSetDemo
 {
@@ -40,7 +41,6 @@ namespace HashSetDemo
             public K Data;
         }
 
-        private const int Lower31BitMask = 0x7FFFFFFF;
         private const int NullNode = 0;
 
         private static readonly int[] bucketsSizeArray = {
@@ -53,7 +53,7 @@ namespace HashSetDemo
         private int[] slots;
         private Node<T>[] nodes;
 
-        private const int MaxLocks = 1024;
+        private const int MaxLocks = 997;
         private Object[] locks = new Object[MaxLocks];
         private Object lock0 = new Object();
 
@@ -76,6 +76,15 @@ namespace HashSetDemo
                 locks[i] = new object();
 
             Clear();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int ClampHash(int hash)
+        {
+            // make sure hash is not negative (used as index after %-operation)
+            // and also not equal to NullNode (used as special indicator)
+            hash = hash & 0x7FFFFFFF;
+            return (hash == NullNode) ? int.MaxValue : hash; 
         }
 
         private int AllocateNode(int mhash)
@@ -113,8 +122,7 @@ namespace HashSetDemo
         {
             EnsureSize();
 
-            // map hashcode to [1, MaxInt]
-            int hash = ((comparer.GetHashCode(item) & Lower31BitMask) + 1) & Lower31BitMask;
+            int hash = ClampHash(comparer.GetHashCode(item));
 
         retry:
             while (signalResize) spinWait.SpinOnce();
@@ -136,7 +144,7 @@ namespace HashSetDemo
         /// <returns>Returns false, if the item is not in the set. True otherwise.</returns>
         public bool Remove(T item)
         {
-            int hash = ((comparer.GetHashCode(item) & Lower31BitMask) + 1) & Lower31BitMask;
+            int hash = ClampHash(comparer.GetHashCode(item));
 
         retry:
             while (signalResize) spinWait.SpinOnce();
@@ -157,7 +165,7 @@ namespace HashSetDemo
         /// <returns>True, if the item is in the set. Otherwise false.</returns>
         public bool Contains(T item)
         {
-            int hash = ((comparer.GetHashCode(item) & Lower31BitMask) + 1) & Lower31BitMask;
+            int hash = ClampHash(comparer.GetHashCode(item));
             int nidx = slots[hash % slots.Length];
 
             if (nidx == NullNode) return false;
