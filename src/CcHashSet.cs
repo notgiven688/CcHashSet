@@ -151,46 +151,32 @@ namespace HashSetDemo
                 int slotl = slots.Length;
                 int hashms = hash % slotl;
 
-                int nidx = slots[hashms];
-                if (nidx == NullNode) return false;
+                int current = slots[hashms];
+                
+                if(current == NullNode) return false;
 
-                ref Node current = ref nodes[nidx];
-
-                if (comparer.Equals(current.Data, item))
+                if(comparer.Equals(nodes[current].Data, item))
                 {
-                    if (current.Next != NullNode)
-                    {
-                        int tr = current.Next;
-                        current.Data = nodes[current.Next].Data;
-                        current.Next = nodes[current.Next].Next;
-                        FreeNode(tr);
-                    }
-                    else
-                    {
-                        slots[hashms] = NullNode;
-                        FreeNode(nidx);
-                    }
-
+                    slots[hashms] = nodes[current].Next;
+                    FreeNode(current);
                     return true;
                 }
 
-                while (current.Next != NullNode)
-                {
-                    ref Node next = ref nodes[current.Next];
+                int next;
 
-                    if (comparer.Equals(next.Data, item))
+                while((next = nodes[current].Next) != NullNode) 
+                {   
+                    if(comparer.Equals(nodes[next].Data, item))
                     {
-                        int tr = current.Next;
-                        current.Next = next.Next;
-                        FreeNode(tr);
+                        nodes[current].Next = nodes[next].Next;
+                        FreeNode(next);
                         return true;
                     }
 
-                    current = ref nodes[current.Next];
+                    current = next;
                 }
 
                 return false;
-
             }
 
             private void EnsureSize()
