@@ -63,29 +63,29 @@ Times in ms:
     <tr>
       <td>40,000</td>
       <td>23</td>
-      <td>43</td>
-      <td>23</td>
+      <td>36</td>
+      <td>26</td>
       <td>22</td>
     </tr>
     <tr>
       <td>100,000</td>
       <td>45</td>
-      <td>90</td>
-      <td>40</td>
+      <td>85</td>
+      <td>47</td>
       <td>47</td>
     </tr>
     <tr>
       <td>3,000,000</td>
       <td>4992</td>
-      <td>5587</td>
-      <td>2312</td>
+      <td>4979</td>
+      <td>1993</td>
       <td>7574</td>
     </tr>
     <tr>
       <td>10,000,000</td>
       <td>18301</td>
-      <td>21849</td>
-      <td>10444</td>
+      <td>19590</td>
+      <td>7716</td>
       <td>47080</td>
     </tr>
   </tbody>
