@@ -23,7 +23,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace HashSetDemo
 {
@@ -87,7 +86,8 @@ namespace HashSetDemo
 
             public bool Add(T item, int hash)
             {
-                EnsureSize();
+                if (8 * (nodePointer - freeNodes) > slots.Length * 6) 
+                    Resize();
 
                 int hashms = hash % slots.Length;
 
@@ -152,31 +152,28 @@ namespace HashSetDemo
                 return false;
             }
 
-            private void EnsureSize()
+            private void Resize()
             {
-                if (this.Count * 10 > slots.Length * 7)
+                slots = new int[bucketsSizeArray[++bucketSize]];
+                Array.Resize<Node>(ref nodes, bucketsSizeArray[bucketSize]);
+
+                int hash, modhash;
+
+                for (int i = 1; i < nodePointer; i++)
                 {
-                    slots = new int[bucketsSizeArray[++bucketSize]];
-                    Array.Resize<Node>(ref nodes, bucketsSizeArray[bucketSize]);
-
-                    int hash, modhash;
-
-                    for (int i = 1; i < nodePointer; i++)
+                    hash = nodes[i].Hash;
+                    if (hash != 0)
                     {
-                        hash = nodes[i].Hash;
-                        if (hash != 0)
+                        modhash = hash % slots.Length;
+                        if (slots[modhash] == NullNode)
                         {
-                            modhash = hash % slots.Length;
-                            if (slots[modhash] == NullNode)
-                            {
-                                slots[modhash] = i;
-                                nodes[i].Next = NullNode;
-                            }
-                            else
-                            {
-                                nodes[i].Next = slots[modhash];
-                                slots[modhash] = i;
-                            }
+                            slots[modhash] = i;
+                            nodes[i].Next = NullNode;
+                        }
+                        else
+                        {
+                            nodes[i].Next = slots[modhash];
+                            slots[modhash] = i;
                         }
                     }
                 }
@@ -197,7 +194,7 @@ namespace HashSetDemo
                 }
                 else
                 {
-                    nodePointer--;
+                    freeNodes--;
                     nodes[0].Next = nodes[next].Next;
                     return next;
                 }
@@ -228,15 +225,6 @@ namespace HashSetDemo
                 sets[i] = new HashSet();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int ClampHash(int hash)
-        {
-            // make sure hash is not negative (used as index after %-operation)
-            // and also not equal to NullNode (used as special indicator)
-            hash = hash & 0x7FFFFFFF;
-            return (hash == 0) ? int.MaxValue : hash;
-        }
-
         /// <summary>
         /// Adds an item to the set.
         /// </summary>
@@ -244,7 +232,7 @@ namespace HashSetDemo
         /// <returns>Return false, if the set already contains the item. Otherwise true.</returns>
         public bool Add(T item)
         {
-            int hc = ClampHash(hasher.GetHashCode(item));
+            int hc = hasher.GetHashCode(item) & 0x7FFFFFFF;
             int idx = hc % NumSets;
 
             lock (sets[idx]) { return sets[idx].Add(item, hc); }
@@ -257,7 +245,7 @@ namespace HashSetDemo
         /// <returns>Return false, if the set does not contain the item. Otherwise true.</returns>
         public bool Remove(T item)
         {
-            int hc = ClampHash(hasher.GetHashCode(item));
+            int hc = hasher.GetHashCode(item) & 0x7FFFFFFF;
             int idx = hc % NumSets;
 
             lock (sets[idx]) { return sets[idx].Remove(item, hc); }
@@ -270,7 +258,7 @@ namespace HashSetDemo
         /// <returns>True, if the item is in the set. Otherwise false.</returns>
         public bool Contains(T item)
         {
-            int hc = ClampHash(hasher.GetHashCode(item));
+            int hc = hasher.GetHashCode(item) & 0x7FFFFFFF;
             int idx = hc % NumSets;
 
             return sets[idx].Contains(item, idx);
