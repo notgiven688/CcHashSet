@@ -23,7 +23,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices; 
+using System.Runtime.CompilerServices;
 
 namespace HashSetDemo
 {
@@ -152,10 +152,10 @@ namespace HashSetDemo
                 int hashms = hash % slotl;
 
                 int current = slots[hashms];
-                
-                if(current == NullNode) return false;
 
-                if(comparer.Equals(nodes[current].Data, item))
+                if (current == NullNode) return false;
+
+                if (comparer.Equals(nodes[current].Data, item))
                 {
                     slots[hashms] = nodes[current].Next;
                     FreeNode(current);
@@ -164,9 +164,9 @@ namespace HashSetDemo
 
                 int next;
 
-                while((next = nodes[current].Next) != NullNode) 
-                {   
-                    if(comparer.Equals(nodes[next].Data, item))
+                while ((next = nodes[current].Next) != NullNode)
+                {
+                    if (comparer.Equals(nodes[next].Data, item))
                     {
                         nodes[current].Next = nodes[next].Next;
                         FreeNode(next);
@@ -242,9 +242,8 @@ namespace HashSetDemo
 
         }
 
-
-        private const int NumSets = 17;
         private HashSet[] sets = new HashSet[NumSets];
+        private const int NumSets = 17;
 
         private IEqualityComparer<T> hasher;
 
@@ -275,23 +274,27 @@ namespace HashSetDemo
             int hc = ClampHash(hasher.GetHashCode(item));
             int idx = hc % NumSets;
 
-            lock(sets[idx]) { return sets[idx].Add(item, hc); }
+            lock (sets[idx]) { return sets[idx].Add(item, hc); }
         }
 
-
+        /// <summary>
+        /// Removes an item from the set.
+        /// </summary>
+        /// <param name="item">Item to remove.</param>
+        /// <returns>Return false, if the set does not contain the item. Otherwise true.</returns>
         public bool Remove(T item)
         {
             int hc = ClampHash(hasher.GetHashCode(item));
             int idx = hc % NumSets;
 
-            lock(sets[idx]) { return sets[idx].Remove(item, hc); }
+            lock (sets[idx]) { return sets[idx].Remove(item, hc); }
         }
 
         public bool Contains(T item)
         {
             int hc = ClampHash(hasher.GetHashCode(item));
             int idx = hc % NumSets;
-            
+
             return sets[idx].Contains(item, idx);
         }
 
@@ -308,7 +311,7 @@ namespace HashSetDemo
 
         public void Clear()
         {
-            for(int i = 0; i < NumSets; i++) 
+            for (int i = 0; i < NumSets; i++)
                 sets[i].Clear();
         }
 
@@ -331,7 +334,8 @@ namespace HashSetDemo
             int index1;
             int index2;
 
-            public CcHashSetEnumerator(CcHashSet<T> hashSet) {
+            public CcHashSetEnumerator(CcHashSet<T> hashSet)
+            {
                 this.hashSet = hashSet;
             }
 
@@ -342,11 +346,11 @@ namespace HashSetDemo
 
             internal bool MoveNext()
             {
-                while(index1 < hashSet.sets.Length)
+                while (index1 < hashSet.sets.Length)
                 {
-                    while(index2++ < hashSet.sets[index1].nodePointer)
+                    while (index2++ < hashSet.sets[index1].nodePointer)
                     {
-                        if(hashSet.sets[index1].nodes[index2].Hash != 0) return true;
+                        if (hashSet.sets[index1].nodes[index2].Hash != 0) return true;
                     }
 
                     index1++;
@@ -369,9 +373,6 @@ namespace HashSetDemo
 
         }
 
-
     }
-
-    
 
 }
