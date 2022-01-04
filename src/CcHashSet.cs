@@ -157,25 +157,12 @@ namespace HashSetDemo
                 slots = new int[bucketsSizeArray[++bucketSize]];
                 Array.Resize<Node>(ref nodes, bucketsSizeArray[bucketSize]);
 
-                int hash, modhash;
-
                 for (int i = 1; i < nodePointer; i++)
                 {
-                    hash = nodes[i].Hash;
-                    if (hash != 0)
-                    {
-                        modhash = hash % slots.Length;
-                        if (slots[modhash] == NullNode)
-                        {
-                            slots[modhash] = i;
-                            nodes[i].Next = NullNode;
-                        }
-                        else
-                        {
-                            nodes[i].Next = slots[modhash];
-                            slots[modhash] = i;
-                        }
-                    }
+                    int modhash = nodes[i].Hash % slots.Length;
+   
+                    nodes[i].Next = slots[modhash];
+                    slots[modhash] = i;
                 }
             }
 
