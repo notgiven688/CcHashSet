@@ -41,6 +41,13 @@ namespace HashSetDemo
                 public int Hash;
                 public int Next;
                 public T Data;
+
+                public void Set(int hash, int next, ref T data)
+                {
+                    this.Data = data;
+                    this.Hash = hash;
+                    this.Next = next;
+                }
             }
 
             private static readonly int[] bucketsSizeArray = {
@@ -68,82 +75,49 @@ namespace HashSetDemo
 
                 comparer = EqualityComparer<T>.Default;
 
-                nodePointer = 1;
-                freeNodes = 0;
+                nodePointer = 1; freeNodes = 0;
             }
 
             public void Clear()
             {
-                nodePointer = 1;
-                freeNodes = 0;
-                nodes[0].Next = NullNode;
-
                 Array.Clear(slots, 0, slots.Length);
+                nodePointer = 1; freeNodes = 0;
+                nodes[0].Next = NullNode;
             }
 
             public bool Add(T item, int hash)
             {
                 EnsureSize();
 
-                int slotl = slots.Length;
-                int hashms = hash % slotl;
+                int hashms = hash % slots.Length;
 
-                int nidx = slots[hashms];
-
-                if (nidx == NullNode)
+                for(int nidx = slots[hashms]; nidx != NullNode; nidx = nodes[nidx].Next)
                 {
-                    slots[hashms] = nidx = AllocateNode();
-                    nodes[nidx].Data = item;
-                    nodes[nidx].Next = NullNode;
-                    nodes[nidx].Hash = hash;
-                    return true;
-                }
-
-                ref Node node = ref nodes[nidx];
-
-                while (true)
-                {
-                    if (node.Hash == hash && comparer.Equals(node.Data, item))
+                    if (nodes[nidx].Hash == hash && comparer.Equals(nodes[nidx].Data, item))
                     {
                         return false; // object already in set
                     }
-
-                    if (node.Next == NullNode) break;
-                    node = ref nodes[node.Next];
                 }
 
-                node.Next = AllocateNode();
-                node = ref nodes[node.Next];
-                node.Next = NullNode;
-                node.Hash = hash;
-                node.Data = item;
+                int nn = AllocateNode();
+                nodes[nn].Set(hash, slots[hashms], ref item);
+                slots[hashms] = nn;
 
                 return true;
             }
 
             public bool Contains(T item, int hash)
             {
-                int slotl = slots.Length;
-                int hashms = hash % slotl;
+                int hashms = hash % slots.Length;
 
-                int nidx = slots[hashms];
-
-                if (nidx == NullNode) return false;
-
-                ref Node node = ref nodes[nidx];
-
-                while (true)
+                for(int nidx = slots[hashms]; nidx != NullNode; nidx = nodes[nidx].Next)
                 {
-                    if (node.Hash == hash && comparer.Equals(node.Data, item))
+                    if (nodes[nidx].Hash == hash && comparer.Equals(nodes[nidx].Data, item))
                     {
-                        return true;
+                        return false; // object already in set
                     }
-
-                    if (node.Next == NullNode) break;
-                    node = ref nodes[node.Next];
                 }
-
-                return false;
+                return true;
             }
 
             public bool Remove(T item, int hash)
@@ -290,6 +264,11 @@ namespace HashSetDemo
             lock (sets[idx]) { return sets[idx].Remove(item, hc); }
         }
 
+        /// <summary>
+        /// Checks wether an item is in the hashset. This method is not thread-safe.
+        /// </summary>
+        /// <param name="item">Item to check.</param>
+        /// <returns>True, if the item is in the set. Otherwise false.</returns>
         public bool Contains(T item)
         {
             int hc = ClampHash(hasher.GetHashCode(item));
@@ -307,8 +286,7 @@ namespace HashSetDemo
             get
             {
                 int count = 0;
-                for (int i = 0; i < NumSets; i++)
-                    count += sets[i].Count;
+                foreach(var hs in sets) count += hs.Count;
                 return count;
             }
         }
