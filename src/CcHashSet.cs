@@ -122,8 +122,7 @@ namespace HashSetDemo
 
             public bool Remove(T item, int hash)
             {
-                int slotl = slots.Length;
-                int hashms = hash % slotl;
+                int hashms = hash % slots.Length;
 
                 int current = slots[hashms];
 
