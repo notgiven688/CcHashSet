@@ -296,8 +296,7 @@ namespace HashSetDemo
         /// </summary>
         public void Clear()
         {
-            for (int i = 0; i < NumSets; i++)
-                sets[i].Clear();
+            foreach(var hs in sets) hs.Clear();
         }
 
         public IEnumerator<T> GetEnumerator()
