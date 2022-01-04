@@ -298,6 +298,10 @@ namespace HashSetDemo
             return sets[idx].Contains(item, idx);
         }
 
+        /// <summary>
+        /// Returns the current number of elements in the set.
+        /// </summary>
+        /// <value>Number of elements.</value>
         public int Count
         {
             get
@@ -309,6 +313,10 @@ namespace HashSetDemo
             }
         }
 
+        /// <summary>
+        /// Clears the hashset. Internal data structures keep their sizes.
+        /// This method is not thread-safe.
+        /// </summary>
         public void Clear()
         {
             for (int i = 0; i < NumSets; i++)
