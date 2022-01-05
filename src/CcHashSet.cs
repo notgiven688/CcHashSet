@@ -128,7 +128,7 @@ namespace HashSetDemo
 
                 if (current == NullNode) return false;
 
-                if (comparer.Equals(nodes[current].Data, item))
+                if (nodes[current].Hash == hash && comparer.Equals(nodes[current].Data, item))
                 {
                     slots[hashms] = nodes[current].Next;
                     FreeNode(current);
@@ -139,7 +139,7 @@ namespace HashSetDemo
 
                 while ((next = nodes[current].Next) != NullNode)
                 {
-                    if (comparer.Equals(nodes[next].Data, item))
+                    if (nodes[current].Hash == hash && comparer.Equals(nodes[next].Data, item))
                     {
                         nodes[current].Next = nodes[next].Next;
                         FreeNode(next);
