@@ -139,7 +139,7 @@ namespace HashSetDemo
 
                 while ((next = nodes[current].Next) != NullNode)
                 {
-                    if (nodes[current].Hash == hash && comparer.Equals(nodes[next].Data, item))
+                    if (nodes[next].Hash == hash && comparer.Equals(nodes[next].Data, item))
                     {
                         nodes[current].Next = nodes[next].Next;
                         FreeNode(next);
