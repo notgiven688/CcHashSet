@@ -41,6 +41,7 @@ namespace HashSetDemo
                 public int Next;
                 public T Data;
 
+
                 public void Set(int hash, int next, ref T data)
                 {
                     this.Data = data;
@@ -80,8 +81,8 @@ namespace HashSetDemo
             public void Clear()
             {
                 Array.Clear(slots, 0, slots.Length);
+                Array.Clear(nodes, 0, nodes.Length);
                 nodePointer = 1; freeNodes = 0;
-                nodes[0].Next = NullNode;
             }
 
             public bool Add(T item, int hash)
@@ -114,10 +115,10 @@ namespace HashSetDemo
                 {
                     if (nodes[nidx].Hash == hash && comparer.Equals(nodes[nidx].Data, item))
                     {
-                        return false; // object already in set
+                        return true; // object already in set
                     }
                 }
-                return true;
+                return false;
             }
 
             public bool Remove(T item, int hash)
@@ -154,15 +155,19 @@ namespace HashSetDemo
 
             private void Resize()
             {
+                // A resize event does only take place when
+                // there are no freenodes in the freenode buffer.
+                System.Diagnostics.Debug.Assert(freeNodes == 0);
+
                 slots = new int[bucketsSizeArray[++bucketSize]];
                 Array.Resize<Node>(ref nodes, bucketsSizeArray[bucketSize]);
 
                 for (int i = 1; i < nodePointer; i++)
                 {
-                    int modhash = nodes[i].Hash % slots.Length;
-   
-                    nodes[i].Next = slots[modhash];
-                    slots[modhash] = i;
+                        int modhash = nodes[i].Hash % slots.Length;
+
+                        nodes[i].Next = slots[modhash];
+                        slots[modhash] = i;
                 }
             }
 
@@ -248,7 +253,7 @@ namespace HashSetDemo
             int hc = hasher.GetHashCode(item) & 0x7FFFFFFF;
             int idx = hc % NumSets;
 
-            return sets[idx].Contains(item, idx);
+            return sets[idx].Contains(item, hc);
         }
 
         /// <summary>
