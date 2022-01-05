@@ -27,12 +27,6 @@ foreach(string str in cch)
 // def
 ```
 
-### Implementation details
-
- - Memory is allocated in a continuous block.
- - Uses thread-locking on bucket-level.
- - Utilizes prime numbers for resizing (grow-only).
-
 ### Benchmark
 
 Intel(R) Xeon(R) CPU E5-4650L 0 @ 2.60GHz\
@@ -90,7 +84,3 @@ Times in ms:
     </tr>
   </tbody>
 </table>
-
-### Notes
-
-This class should be used with care. No extensive checks for correctness were done.
