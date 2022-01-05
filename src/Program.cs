@@ -32,7 +32,7 @@ namespace HashSetDemo
 
     class Program
     {
-        const int TestSize = 100_000;
+        const int TestSize = 10_000_000;
 
         static SystemHashSet shs;
         static CustomHashSet chs;
