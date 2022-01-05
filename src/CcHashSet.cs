@@ -41,7 +41,6 @@ namespace HashSetDemo
                 public int Next;
                 public T Data;
 
-
                 public void Set(int hash, int next, ref T data)
                 {
                     this.Data = data;
@@ -164,10 +163,10 @@ namespace HashSetDemo
 
                 for (int i = 1; i < nodePointer; i++)
                 {
-                        int modhash = nodes[i].Hash % slots.Length;
+                    int modhash = nodes[i].Hash % slots.Length;
 
-                        nodes[i].Next = slots[modhash];
-                        slots[modhash] = i;
+                    nodes[i].Next = slots[modhash];
+                    slots[modhash] = i;
                 }
             }
 
